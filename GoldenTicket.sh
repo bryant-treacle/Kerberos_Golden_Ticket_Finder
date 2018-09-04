@@ -1,4 +1,5 @@
 #!/bin/bash
+
 as_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
 {
   "size": "1000",
@@ -16,7 +17,6 @@ as_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content
   }
 }'| jq '.hits.hits[]._source.client' | uniq)
 
-echo "$as_request"
 
 tgs_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
 {
@@ -35,5 +35,4 @@ tgs_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Conten
   }
 }'| jq '.hits.hits[]._source.client' | uniq)
 
-echo "$tgs_request"
 
