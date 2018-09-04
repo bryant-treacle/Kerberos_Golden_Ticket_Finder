@@ -1,0 +1,39 @@
+#!/bin/bash
+as_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
+{
+  "size": "1000",
+  "query": {
+    "constant_score": {
+      "filter": {
+        "bool": {
+          "should": [
+            {"term" : {"request_type.keyword": "AS"}},
+            {"term" : {"client.keyword": "*"}}
+            ]
+        }
+      }
+    }
+  }
+}'| jq '.hits.hits[]._source.client' | uniq)
+
+echo "$as_request"
+
+tgs_request=$(curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
+{
+  "size": "1000",
+  "query": {
+    "constant_score": {
+      "filter": {
+        "bool": {
+          "should": [
+            {"term" : {"request_type.keyword": "TGS"}},
+            {"term" : {"client.keyword": "*"}}
+            ]
+        }
+      }
+    }
+  }
+}'| jq '.hits.hits[]._source.client' | uniq)
+
+echo "$tgs_request"
+
