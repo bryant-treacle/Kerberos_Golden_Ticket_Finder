@@ -16,12 +16,12 @@
 # Author: Bryant Treacle
 # Purpose: This script will look for Kerberos Golden Tickets in Security Onion by querying Elasticsearch for AS and TGS requests.
 
-##############################
-# AS ticket request function #
-##############################
+#####################################
+# Client AS ticket request function #
+#####################################
 
 # Query elasticsearch for the source IP address of all kerberos AS (tgt) ticket requests in the last 2 hours and write to file as_request.txt
-as_request_function()
+client_as_request_function()
 {
 curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
 {
@@ -36,16 +36,43 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: applic
         ]
      }
    }
-}' | jq '.hits.hits[]._source.source_ip' | sort | uniq > as_request.txt
+}' | jq '.hits.hits[]._source.client' | sort | uniq > client_as_request.txt
+# remove the realm from the client name.  Causes false positives if the requesting service if the realms are not exact.
+sed -i 's|/.*||g'  client_as_request.txt
+sed -i 's|"||g'  client_as_request.txt
 }
 
-###############################
-# TGS ticket request function #
-###############################
+##########################################
+# Workstation AS ticket request function #
+########################################
+
+# Query elasticsearch for the source IP address of all kerberos AS (tgt) ticket requests in the last 2 hours and write to file as_request.txt
+workstation_as_request_function()
+{
+curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
+{
+  "size": "10000",
+  "query": {
+    "bool": {
+      "must": [
+        {"term" : {"request_type.keyword": "AS"}}
+        ],
+        "filter": [
+          { "range": {"@timestamp": {"gte": "now-3h/h"}}}
+        ]
+     }
+   }
+}' | jq '.hits.hits[]._source.source_ip' | sort | uniq > workstation_as_request.txt
+}
+
+
+######################################
+# Client TGS ticket request function #
+######################################
 
 # Query elasticsearch for the source IP address of all kerberos tgs ticket requests in the last 1 hour and write to file tgs_request.txt
 
-tgs_request_function()
+client_tgs_request_function()
 {
 curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
 {
@@ -60,34 +87,84 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: applic
         ]
      }
    }
-}' | jq '.hits.hits[]._source.source_ip' | sort | uniq > tgs_request.txt
+}' | jq '.hits.hits[]._source.client' | sort | uniq > client_tgs_request.txt
+
+# remove the realm from the client name.  Causes false positives if the requesting service if the realms are not exact.
+sed -i 's|/.*||g'  client_tgs_request.txt
+sed -i 's|"||g'  client_tgs_request.txt
 }
 
-########################
-# Golden Ticket Search #
-########################
+
+###########################################
+# Workstation TGS ticket request function #
+###########################################
+
+# Query elasticsearch for the source IP address of all kerberos tgs ticket requests in the last 1 hour and write to file tgs_request.txt
+
+workstation_tgs_request_function()
+{
+curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: application/json' -d'
+{
+  "size": "10000",
+  "query": {
+    "bool": {
+      "must": [
+        {"term" : {"request_type.keyword": "TGS"}}
+        ],
+        "filter": [
+          { "range": {"@timestamp": {"gte": "now-2h/h"}}}
+        ]
+     }
+   }
+}' | jq '.hits.hits[]._source.source_ip' | sort | uniq > workstation_tgs_request.txt
+}
+
+##############################
+#Client Golden Ticket Search #
+##############################
 
 # For loop to verify every IP that requested a Kerberos service (tgs_request.txt) was authenticated to the KDC within x hours before (as_request.txt)
 
-golden_ticket_finder()
+client_golden_ticket_finder()
 {
 while read client_tgs_request; do
-client_as_request=$(grep $client_tgs_request as_request.txt)
-if [ "$client_as_request" == "$client_tgs_request" ]; then
-    echo "TGT request found for $client_tgs_request" >> golden_ticket_results.txt
-else
-    echo "No TGT request found for $client_tgs_request" >> golden_ticket_results.txt
+client_as_request=$(cat client_as_request.txt | grep $client_tgs_request)
+if [ "$client_as_request" != "$client_tgs_request" ]; then
+    echo "No TGT request found for the following user: $client_tgs_request" >> golden_ticket_results.txt
 fi
 
-done < tgs_request.txt
+done < client_tgs_request.txt
 }
 
+
+###################################
+#Workstation Golden Ticket Search #
+###################################
+
+# For loop to verify every IP that requested a Kerberos service (tgs_request.txt) was authenticated to the KDC within x hours before (as_request.txt)
+
+workstation_golden_ticket_finder()
+{
+while read workstation_tgs_request; do
+workstation_as_request=$(cat workstation_as_request.txt | grep $workstation_tgs_request)
+if [ "$workstation_as_request" != "$workstation_tgs_request" ]; then
+    echo "No TGT request found for the following workstation: $workstation_tgs_request" >> golden_ticket_results.txt
+fi
+
+done < workstation_tgs_request.txt
+}
 
 ########################
 #  Function Execution  #
 ########################
-as_request_function
-tgs_request_function
-golden_ticket_finder
+client_as_request_function
+client_tgs_request_function
+client_golden_ticket_finder
+workstation_as_request_function
+workstation_tgs_request_function
+workstation_golden_ticket_finder
 
+
+rm c*.txt
+rm w*.txt
 
