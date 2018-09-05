@@ -28,12 +28,11 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: applic
   "size": "10000",
   "query": {
     "bool": {
-      "should": [
-        {"term" : {"request_type.keyword": "AS"}},
-        {"term" : {"client.keyword": "*"}}
+      "must": [
+        {"term" : {"request_type.keyword": "AS"}}
         ],
         "filter": [
-          { "range": {"@timestamp": {"gte": "now-2h/h"}}}
+          { "range": {"@timestamp": {"gte": "now-3h/h"}}}
         ]
      }
    }
@@ -53,9 +52,8 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: applic
   "size": "10000",
   "query": {
     "bool": {
-      "should": [
-        {"term" : {"request_type.keyword": "TGS"}},
-        {"term" : {"client.keyword": "*"}}
+      "must": [
+        {"term" : {"request_type.keyword": "TGS"}}
         ],
         "filter": [
           { "range": {"@timestamp": {"gte": "now-2h/h"}}}
