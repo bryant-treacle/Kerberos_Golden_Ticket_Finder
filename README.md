@@ -1,6 +1,3 @@
-# bro_json_parse
-This script will parse the Archived Bro JSON files for all logs associated by an IP address or a range of Addresses
-
 # golden_ticket_finder
 This script is designed to run on Security Onion master running in any deployment configuration.  
 
