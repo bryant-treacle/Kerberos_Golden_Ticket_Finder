@@ -8,7 +8,7 @@ Kerberos Golden Ticket attack occurs when an attacker forges a clients TGT by ha
 
 To detect this behavior using Bro, you will look for a situation where a client is requesting a TGS ticket and has not requested a TGT within X hours.  The X hours is the valid till date which is a setting in the KDC.
 
-* This script queries elasticsearch for Kerberos AS and TGS ticket request and performs a for loop comparing every entry in the TGS results with the results of the AS query.
+* This script queries elasticsearch for Kerberos AS and TGS ticket request and performs a for loop comparing every entry in the TGS results with the results of the AS query and writing the results to the golden_ticket_results.txt file.
 
 * To reduce the amount of false negatives it is important to keep the queries to the minimal timeframe.  By default the script will pull all TGS request in the last 2 hours and all AS(TGT) requests in the last 3 hours.  
 
