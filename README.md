@@ -2,9 +2,9 @@
 This script will parse the Archived Bro JSON files for all logs associated by an IP address or a range of Addresses
 
 # golden_ticket_finder
-This script is designed to run on Securuty Onion master running in any deployment configuration.  
+This script is designed to run on Security Onion master running in any deployment configuration.  
 
-Kerberos Golden Ticket attack occurs when an attacker forges a clients TGT by harvesting the KDC services password and hashes a forged TGT ticket with elevated privilages or permissions.  The attaker then request access to a service sending the KDC the forged ticket.
+Kerberos Golden Ticket attack occurs when an attacker forges a clients TGT by harvesting the KDC services password and hashes a forged TGT ticket with elevated privileges or permissions.  The attacker then request access to a service sending the KDC the forged ticket.
 
 To detect this behavior using Bro, you will look for a situation where a client is requesting a TGS ticket and has not requested a TGT within X hours.  The X hours is the valid till date which is a setting in the KDC.
 
