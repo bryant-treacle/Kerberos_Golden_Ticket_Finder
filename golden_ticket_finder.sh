@@ -128,7 +128,7 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search" -H 'Content-Type: applic
 client_golden_ticket_finder()
 {
 while read client_tgs_request; do
-client_as_request=$(cat client_as_request.txt | grep $client_tgs_request)
+client_as_request=$(cat client_as_request.txt | grep -F $client_tgs_request)
 if [ "$client_as_request" != "$client_tgs_request" ]; then
     echo "No TGT request found for the following user: $client_tgs_request" >> golden_ticket_results.txt
 fi
@@ -146,7 +146,7 @@ done < client_tgs_request.txt
 workstation_golden_ticket_finder()
 {
 while read workstation_tgs_request; do
-workstation_as_request=$(cat workstation_as_request.txt | grep $workstation_tgs_request)
+workstation_as_request=$(cat workstation_as_request.txt | grep -F $workstation_tgs_request)
 if [ "$workstation_as_request" != "$workstation_tgs_request" ]; then
     echo "No TGT request found for the following workstation: $workstation_tgs_request" >> golden_ticket_results.txt
 fi
