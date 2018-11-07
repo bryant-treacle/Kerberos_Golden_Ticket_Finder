@@ -17,4 +17,4 @@ To detect this behavior using Bro, you will look for a situation where a client 
 This script queries elasticsearch for Kerberos TGS ticket within the last 24 hours and AS(TGT) tickets within the last "X" days.  It then performs a for loop searching (grep) every entry in the TGS results within the AS(TGT) results and alerts if there is not an AS(TGT) request preceding the TGS request.  It writes the results to the golden_ticket_results.txt file.
 
 ## Handling large volumes of logs
-Elasticsearch will only return a maximum of 10,000 results from a query using the search api.  To overcome this limitation the script splits the maximum renewal timeframe into 1 hour increments along with the elasticsearch scroll function.   
+Elasticsearch will only return a maximum of 10,000 results from a query using the search api.  To overcome this limitation the script splits the query timeframe into 1 hour increments and utilizes the elasticsearch scroll function.   
