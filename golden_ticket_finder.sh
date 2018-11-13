@@ -23,14 +23,15 @@
 initial_prompt()
 {
 echo ""
-echo "What is the maximum renewal peroid for Kerberos tickets in days?"
+echo "What is the maximum renewal period for Kerberos tickets in days?"
 read renew_time
 
 # Convert the days to hours and add a padding to compensate for UTC/working timezone differences
-start_time=$(($renew_time * 24 + 24))
+start_time=$(($renew_time * 24))
 # The script will query elasticsearch at one hour increments to help handle large data sets
 end_time=$(($start_time - 1))
-
+echo ""
+echo "Depending on the renewal period this may take a while."
 }
 
 #####################################
@@ -71,7 +72,7 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search?scroll=5m" -H 'Content-Ty
           { "range": {"@timestamp": {"gte": "now-'$start_time'h", "lte": "now-'$end_time'h"}}}
         ]
      }
-   }
+  } 
 }' | jq '.hits.hits[]._source.client' >> client_as_request_temp.txt
 
 # Get remaining results from previous query
@@ -84,7 +85,7 @@ curl -XGET "http://localhost:9200/_search/scroll" -H 'Content-Type: application/
   "scroll": "5m",
   "scroll_id": $SCROLL_ID
 }' | jq '.hits.hits[]._source.client' >> client_as_request_temp.txt
-done 
+done
 
 # Changing the Start and End time variables to account for the previous hours logs.
 start_time=$(($end_time))
@@ -92,9 +93,11 @@ end_time=$(( $start_time -1 ))
 done
 
 # remove the realm from the client name.  Causes false positives if the requesting service if the realms are not exact.
-sed -i 's|/.*||g'  client_as_request_temp.txt
+so ""
+echo "Depending on the renewal period this may take a while."
+d -i 's|/.*||g'  client_as_request_temp.txt
 sed -i 's|"||g'  client_as_request_temp.txt
-cat client_as_request_temp.txt | sourt -u > client_as_request.txt
+cat client_as_request_temp.txt | sort -u > client_as_request.txt
 rm client_as_request_temp.txt
 
 }
@@ -116,7 +119,7 @@ SCROLL_ID=$(curl -XGET "http://localhost:9200/*:logstash-*/_search?scroll=5m" -H
         {"term" : {"request_type.keyword": "TGS"}}
         ],
         "filter": [
-          { "range": {"@timestamp": {"gte": "now-24h"}}}
+	    { "range": {"@timestamp": {"gte": "now-24h"}}}	          
         ]
      }
    }
@@ -132,7 +135,8 @@ curl -XGET "http://localhost:9200/*:logstash-*/_search?scroll=5m" -H 'Content-Ty
         {"term" : {"request_type.keyword": "TGS"}}
         ],
         "filter": [
-          { "range": {"@timestamp": {"gte": "now-24h", "lte": "now-24h"}}}
+	    { "range": {"@timestamp": {"gte": "now-24h"}}}
+         
         ]
      }
    }
@@ -174,7 +178,11 @@ done < client_tgs_request.txt
 ########################
 #  Function Execution  #
 ########################
-initial_prompt
-client_as_request_function
-client_tgs_request_function
+#&> /dev/null
+
+initial_prompt 
+client_as_request_function &> /dev/null
+client_tgs_request_function &> /dev/null 
 golden_ticket_search
+echo ""
+echo "Complete!!! Wrote the results in the current working directory!"
