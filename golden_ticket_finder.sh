@@ -93,9 +93,9 @@ end_time=$(( $start_time -1 ))
 done
 
 # remove the realm from the client name.  Causes false positives if the requesting service if the realms are not exact.
-so ""
+echo ""
 echo "Depending on the renewal period this may take a while."
-d -i 's|/.*||g'  client_as_request_temp.txt
+sed -i 's|/.*||g'  client_as_request_temp.txt
 sed -i 's|"||g'  client_as_request_temp.txt
 cat client_as_request_temp.txt | sort -u > client_as_request.txt
 rm client_as_request_temp.txt
